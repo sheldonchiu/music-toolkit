@@ -61,7 +61,7 @@ def copy_pic_wav(src, dst):
     dst.save()
     
     
-def convert(srcPath, dstPath, srcFile, bitrate='320k', with_img=True, flatten=False):
+def convert(srcPath, dstPath, srcFile, bitrate='320k', min=False, flatten=False):
     try:
         fileName, fileFormat = os.path.splitext(os.path.basename(srcFile))
         fileFormat = fileFormat.replace('.', '')
@@ -81,31 +81,30 @@ def convert(srcPath, dstPath, srcFile, bitrate='320k', with_img=True, flatten=Fa
         logger.exception(f"Failed to convert {srcFile}")
         return -1
     
-    src = mutagen.File(srcFile)
-    if 'wav' in srcFile:
-        copy_tags_wav(src, EasyID3(outputFilePath))
-        if with_img:
+    if not min:
+        src = mutagen.File(srcFile)
+        if 'wav' in srcFile:
+            copy_tags_wav(src, EasyID3(outputFilePath))
             copy_pic_wav(src, MP3(outputFilePath, ID3=ID3))
-    else:
-        copy_tags(src,EasyID3(outputFilePath))
-        if with_img:
+        else:
+            copy_tags(src,EasyID3(outputFilePath))
             copy_pic(src, MP3(outputFilePath, ID3=ID3))
     logger.info(f"Finish converting {srcFile}")
 
-def convertAll(hiResPath, mp3Path, bitrate, with_img, flatten):
+def convertAll(hiResPath, mp3Path, bitrate, min, flatten):
     files = glob(hiResPath +'/**', recursive=True)
     for hiRes in files:
         if os.path.isfile(hiRes) == False:
             continue
-        convert(hiResPath, mp3Path, hiRes, bitrate, with_img, flatten)
+        convert(hiResPath, mp3Path, hiRes, bitrate, min, flatten)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert hiRes to mp3')
     parser.add_argument('--src_dir', type=str, required=False, default='/data/hiRes', help='Path to source directory')
     parser.add_argument('--dst_dir', type=str, required=False, default='/data/mp3', help='Path to destination directory')
     parser.add_argument('--bitrate', type=str, required=False, default='320k', help='mp3 bitrate')
-    parser.add_argument('--with_img', action='store_true', help='Copy cover image to mp3')
+    parser.add_argument('--min', action='store_true', help='minimal mode')
     parser.add_argument('--flatten', action='store_true', help='copy to flat directory structure')
     args = parser.parse_args()
-    convertAll(hiResPath=args.src_dir, mp3Path=args.dst_dir, bitrate=args.bitrate, with_img=args.with_img, flatten=args.flatten)
+    convertAll(hiResPath=args.src_dir, mp3Path=args.dst_dir, bitrate=args.bitrate, min=args.min, flatten=args.flatten)
 
