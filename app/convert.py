@@ -61,14 +61,15 @@ def copy_pic_wav(src, dst):
     dst.save()
     
     
-def convert(srcPath, dstPath, srcFile, bitrate='320k', with_img=True):
+def convert(srcPath, dstPath, srcFile, bitrate='320k', with_img=True, flatten=False):
     try:
         fileName, fileFormat = os.path.splitext(os.path.basename(srcFile))
         fileFormat = fileFormat.replace('.', '')
         folder = os.path.relpath(srcFile, srcPath)
         pathComponent = os.path.normpath(folder).split(os.sep)
 
-        outpath = os.path.join(dstPath,*pathComponent[:-1])
+        outpath = dstPath if flatten else os.path.join(dstPath,*pathComponent[:-1]) 
+        
         outputFilePath = f"{os.path.join(outpath, fileName)}.mp3"
         if os.path.exists(outputFilePath):
             logger.info(f"[SKIP] {srcFile} already exists")
@@ -91,12 +92,12 @@ def convert(srcPath, dstPath, srcFile, bitrate='320k', with_img=True):
             copy_pic(src, MP3(outputFilePath, ID3=ID3))
     logger.info(f"Finish converting {srcFile}")
 
-def convertAll(hiResPath, mp3Path, bitrate):
+def convertAll(hiResPath, mp3Path, bitrate, with_img, flatten):
     files = glob(hiResPath +'/**', recursive=True)
     for hiRes in files:
         if os.path.isfile(hiRes) == False:
             continue
-        convert(hiResPath, mp3Path, hiRes, bitrate)
+        convert(hiResPath, mp3Path, hiRes, bitrate, with_img, flatten)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert hiRes to mp3')
@@ -104,6 +105,7 @@ if __name__ == "__main__":
     parser.add_argument('--dst_dir', type=str, required=False, default='/data/mp3', help='Path to destination directory')
     parser.add_argument('--bitrate', type=str, required=False, default='320k', help='mp3 bitrate')
     parser.add_argument('--with_img', action='store_true', help='Copy cover image to mp3')
+    parser.add_argument('--flatten', action='store_true', help='copy to flat directory structure')
     args = parser.parse_args()
-    convertAll(hiResPath=args.src_dir, mp3Path=args.dst_dir, bitrate=args.bitrate, with_img=args.with_img)
+    convertAll(hiResPath=args.src_dir, mp3Path=args.dst_dir, bitrate=args.bitrate, with_img=args.with_img, flatten=args.flatten)
 
