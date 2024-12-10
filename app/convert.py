@@ -1,9 +1,8 @@
 
 #%%
 import os
-import traceback
 from glob import glob
-import shutil
+import multiprocessing
 import argparse
 
 from pydub import AudioSegment
@@ -13,6 +12,7 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC
 
 import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 #%%
@@ -93,10 +93,15 @@ def convert(srcPath, dstPath, srcFile, bitrate='320k', min=False, flatten=False)
 
 def convertAll(hiResPath, mp3Path, bitrate, min, flatten):
     files = glob(hiResPath +'/**', recursive=True)
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()/2)
+    
     for hiRes in files:
         if os.path.isfile(hiRes) == False:
             continue
-        convert(hiResPath, mp3Path, hiRes, bitrate, min, flatten)
+        pool.starmap(convert, [(hiResPath, mp3Path, hiRes, bitrate, min, flatten),])
+        
+    pool.close()
+    pool.join()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Convert hiRes to mp3')
