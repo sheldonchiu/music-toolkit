@@ -1,5 +1,5 @@
 import os
-from os import os as osp
+from os import path as osp
 import argparse
 from glob import glob
 import random
@@ -35,6 +35,8 @@ if __name__ == "__main__":
     # Specify the folder path where you want to rename files
     parser = argparse.ArgumentParser()
     parser.add_argument('--src_dir', type=str, required=True, help='Path to source directory')
+    
+    args = parser.parse_args()
 
     # Call the function to rename files in the specified folder
-    rename_files_in_folder(parser.src_dir)
+    rename_files_in_folder(args.src_dir)
